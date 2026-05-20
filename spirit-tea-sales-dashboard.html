@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spirit Tea — Sales Performance Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+:root{color-scheme:light;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f2f5;color:#1a1a2e;font-size:13px;}
+
+#auth-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);}
+.auth-box{background:#fff;border-radius:16px;padding:40px;width:440px;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.auth-logo{font-size:28px;font-weight:900;color:#0f172a;margin-bottom:4px;}
+.auth-logo span{color:#10b981;}
+.auth-sub{font-size:12px;color:#888;margin-bottom:28px;}
+.auth-label{font-size:11px;font-weight:700;color:#444;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.auth-input{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 14px;font-size:13px;outline:none;transition:border .2s;}
+.auth-input:focus{border-color:#10b981;}
+.auth-hint{font-size:11px;color:#aaa;margin-top:6px;margin-bottom:16px;line-height:1.5;}
+.auth-hint a{color:#10b981;text-decoration:none;}
+.auth-btn{width:100%;background:#10b981;color:#fff;border:none;border-radius:8px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;margin-top:16px;}
+.auth-btn:hover{background:#059669;}
+.auth-btn:disabled{opacity:.6;cursor:not-allowed;}
+#auth-error{display:none;margin-top:12px;color:#dc2626;font-size:12px;text-align:center;background:#fee2e2;padding:8px;border-radius:6px;}
+
+#dashboard{display:none;}
+header{background:#0f172a;color:#fff;padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;}
+.logo{font-size:16px;font-weight:900;letter-spacing:-.3px;}
+.logo span{color:#10b981;}
+.header-pipe{color:#ffffff30;font-size:18px;margin:0 12px;}
+.header-title{font-size:13px;font-weight:600;color:#94a3b8;}
+.header-right{display:flex;align-items:center;gap:12px;}
+#last-updated{font-size:11px;color:#64748b;}
+.btn-refresh{background:#10b981;color:#fff;border:none;padding:6px 16px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;}
+.btn-refresh:disabled{opacity:.5;cursor:not-allowed;}
+.btn-logout{background:transparent;color:#64748b;border:1px solid #334155;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px;}
+
+#loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.88);z-index:9999;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.spinner{width:40px;height:40px;border:3px solid #334155;border-top-color:#10b981;border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-text{color:#94a3b8;font-size:14px;}
+.load-progress{color:#10b981;font-size:12px;}
+
+main{padding:20px 24px;}
+
+.nav-tabs{display:flex;gap:4px;margin-bottom:20px;background:#fff;border-radius:10px;padding:4px;border:1px solid #e5e7eb;width:fit-content;}
+.tab-btn{padding:7px 18px;border:none;background:transparent;border-radius:7px;font-size:12px;font-weight:600;color:#64748b;cursor:pointer;transition:all .2s;}
+.tab-btn.active{background:#0f172a;color:#fff;}
+
+.section-title{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.7px;margin-bottom:12px;}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:20px;}
+.kpi-card{background:#fff;border-radius:10px;padding:16px;border:1px solid #e5e7eb;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.kpi-card.green::before{background:#10b981;}
+.kpi-card.red::before{background:#ef4444;}
+.kpi-card.blue::before{background:#3b82f6;}
+.kpi-card.amber::before{background:#f59e0b;}
+.kpi-card.purple::before{background:#8b5cf6;}
+.kpi-label{font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;}
+.kpi-value{font-size:28px;font-weight:900;color:#0f172a;line-height:1.1;margin-top:4px;}
+.kpi-sub{font-size:11px;color:#94a3b8;margin-top:3px;}
+
+.grid-65{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:16px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+
+.card{background:#fff;border-radius:10px;border:1px solid #e5e7eb;overflow:hidden;}
+.card-header{padding:14px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:700;color:#0f172a;}
+.card-sub{font-size:11px;color:#94a3b8;}
+.chart-wrap{padding:16px;position:relative;}
+.h200{height:230px;}
+.h160{height:185px;}
+
+table{width:100%;border-collapse:collapse;}
+th{background:#f8fafc;padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;border-bottom:1px solid #e5e7eb;white-space:nowrap;}
+th.r{text-align:right;}
+td{padding:10px 14px;border-bottom:1px solid #f1f5f9;vertical-align:middle;font-size:12px;}
+td.r{text-align:right;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+
+.rep-av{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:10px;font-weight:800;color:#fff;margin-right:8px;flex-shrink:0;}
+.rep-cell{display:flex;align-items:center;}
+
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:700;}
+.b-won{background:#d1fae5;color:#065f46;}
+.b-lost{background:#fee2e2;color:#991b1b;}
+.b-open{background:#dbeafe;color:#1d4ed8;}
+.b-warn{background:#fef3c7;color:#92400e;}
+.b-act{background:#ede9fe;color:#5b21b6;}
+.b-neutral{background:#f1f5f9;color:#475569;}
+.b-risk{background:#fee2e2;color:#991b1b;}
+
+.wr-wrap{display:flex;align-items:center;gap:8px;}
+.wr-bg{flex:1;background:#f1f5f9;border-radius:4px;height:6px;min-width:50px;}
+.wr-fill{height:6px;border-radius:4px;}
+.wr-pct{font-size:11px;font-weight:800;min-width:32px;text-align:right;}
+
+.vel-fast{color:#059669;font-weight:800;}
+.vel-mid{color:#d97706;font-weight:800;}
+.vel-slow{color:#dc2626;font-weight:800;}
+
+.stalled-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px;padding:14px;}
+.stalled-card{border:1px solid #e5e7eb;border-radius:8px;padding:12px;background:#fff;border-left:3px solid #f59e0b;}
+.stalled-card.hot{border-left-color:#ef4444;}
+.stalled-deal{font-weight:700;font-size:12px;color:#0f172a;}
+.stalled-deal a{color:inherit;text-decoration:none;}
+.stalled-deal a:hover{text-decoration:underline;}
+.stalled-meta{font-size:11px;color:#94a3b8;margin-top:2px;}
+.stalled-days{display:inline-block;margin-top:6px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+.sd-hot{background:#fee2e2;color:#b91c1c;}
+.sd-warn{background:#fef3c7;color:#92400e;}
+.rep-group-title{padding:12px 14px 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;}
+
+/* TOOLTIP */
+.th-tip{position:relative;display:inline-flex;align-items:center;gap:4px;cursor:default;}
+.tip-icon{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:#e2e8f0;color:#64748b;font-size:9px;font-weight:900;cursor:help;flex-shrink:0;line-height:1;}
+.tip-box{display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1e293b;color:#e2e8f0;font-size:11px;font-weight:400;padding:8px 10px;border-radius:7px;white-space:normal;width:220px;z-index:9999;text-transform:none;letter-spacing:0;line-height:1.5;box-shadow:0 4px 16px rgba(0,0,0,.35);}
+.tip-box::before{content:'';position:absolute;bottom:100%;left:50%;transform:translateX(-50%);border:5px solid transparent;border-bottom-color:#1e293b;}
+.th-tip:hover .tip-box{display:block;}
+
+/* RISK ALERT CARDS */
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;padding:14px;}
+.risk-card{border:1px solid #fecaca;border-radius:8px;padding:12px;background:#fff9f9;border-left:3px solid #ef4444;}
+.risk-card.medium{border-color:#fde68a;background:#fffdf0;border-left-color:#f59e0b;}
+.risk-deal{font-weight:700;font-size:12px;color:#0f172a;}
+.risk-deal a{color:inherit;text-decoration:none;}
+.risk-deal a:hover{text-decoration:underline;}
+.risk-meta{font-size:11px;color:#94a3b8;margin-top:2px;}
+.risk-tag{display:inline-block;margin-top:5px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;}
+.rt-critical{background:#fee2e2;color:#b91c1c;}
+.rt-warning{background:#fef3c7;color:#92400e;}
+
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+
+/* QUARTER FILTER BUTTONS */
+.q-btn{padding:6px 14px;border:1.5px solid #e5e7eb;background:#f8fafc;border-radius:7px;font-size:12px;font-weight:700;color:#64748b;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.q-btn:hover{border-color:#10b981;color:#10b981;}
+.q-btn.q-active{background:#0f172a;color:#fff;border-color:#0f172a;}
+.q-btn.q-active[data-q="all"]{background:#10b981;border-color:#10b981;}
+.empty-state{padding:30px;text-align:center;color:#94a3b8;font-size:13px;}
+
+@media(max-width:900px){
+  .kpi-grid{grid-template-columns:repeat(3,1fr);}
+  .grid-2,.grid-65{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">Spirit <span>Tea</span></div>
+    <div class="auth-sub">Sales Performance Dashboard · Acceso restringido</div>
+    <div class="auth-label">Contraseña</div>
+    <input class="auth-input" type="password" id="token-input" placeholder="Ingresa tu contraseña" autocomplete="off">
+    <div class="auth-hint">Contacta a tu administrador si no tienes acceso.</div>
+    <button class="auth-btn" onclick="authenticate()">Cargar Dashboard</button>
+    <div id="auth-error"></div>
+  </div>
+</div>
+
+<!-- LOADING -->
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="load-text">Cargando datos desde HubSpot...</div>
+  <div class="load-progress" id="load-progress">Iniciando...</div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header>
+    <div style="display:flex;align-items:center">
+      <div class="logo">Spirit <span>Tea</span></div>
+      <div class="header-pipe">|</div>
+      <div class="header-title">Sales Performance Dashboard</div>
+    </div>
+    <div class="header-right">
+      <span id="last-updated">—</span>
+      <button class="btn-refresh" id="refresh-btn" onclick="loadDashboard()">↻ Actualizar</button>
+      <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- QUARTER FILTER -->
+    <div id="quarter-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 16px;flex-wrap:wrap;">
+      <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">📅 Período:</span>
+      <div id="q-btns" style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="q-btn q-active" data-q="all"   onclick="toggleQ(this)">All Time</button>
+        <button class="q-btn"          data-q="q1"    onclick="toggleQ(this)">Q1 2026 <span style="font-size:10px;color:inherit;opacity:.7">Jan–Mar</span></button>
+        <button class="q-btn"          data-q="q2"    onclick="toggleQ(this)">Q2 2026 <span style="font-size:10px;color:inherit;opacity:.7">Apr–Jun</span></button>
+        <button class="q-btn"          data-q="q3"    onclick="toggleQ(this)">Q3 2026 <span style="font-size:10px;color:inherit;opacity:.7">Jul–Sep</span></button>
+        <button class="q-btn"          data-q="q4"    onclick="toggleQ(this)">Q4 2026 <span style="font-size:10px;color:inherit;opacity:.7">Oct–Dec</span></button>
+      </div>
+      <span style="font-size:11px;color:#94a3b8;margin-left:4px;">Puedes seleccionar varios quarters a la vez</span>
+      <span id="q-label" style="margin-left:auto;font-size:11px;font-weight:700;color:#10b981;white-space:nowrap;"></span>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('overview',this)">📊 Team Overview</button>
+      <button class="tab-btn" onclick="switchTab('reps',this)">👤 Rep Detail</button>
+      <button class="tab-btn" onclick="switchTab('pipeline',this)">🔀 Pipeline</button>
+      <button class="tab-btn" onclick="switchTab('risk',this)">⚠️ Deals at Risk</button>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="tab-content active" id="tab-overview">
+      <div class="section-title">📌 Team Snapshot — All Time</div>
+      <div class="kpi-grid">
+        <div class="kpi-card blue"><div class="kpi-label">Open Deals</div><div class="kpi-value" id="kpi-open">—</div><div class="kpi-sub">Pipeline activo</div></div>
+        <div class="kpi-card green"><div class="kpi-label">Closed Won</div><div class="kpi-value" id="kpi-won">—</div><div class="kpi-sub">All time</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Closed Lost</div><div class="kpi-value" id="kpi-lost">—</div><div class="kpi-sub" id="kpi-wr">Win rate: —</div></div>
+        <div class="kpi-card amber"><div class="kpi-label">Stalled &gt;14d</div><div class="kpi-value" id="kpi-stalled">—</div><div class="kpi-sub">Necesitan acción</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Avg Days to Close</div><div class="kpi-value" id="kpi-velocity">—</div><div class="kpi-sub">Deals cerrados (won)</div></div>
+      </div>
+
+      <div class="grid-65">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Deals by Rep</div><div class="card-sub">Open / Won / Lost</div></div>
+          <div class="chart-wrap h200"><canvas id="chart-rep-deals"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Win Rate by Rep</div><div class="card-sub">Solo deals cerrados</div></div>
+          <div class="chart-wrap h200"><canvas id="chart-winrate"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Actividad — Últimos 90 días</div><div class="card-sub">Calls · Meetings · Emails · Notas · Tasks</div></div>
+          <div class="chart-wrap h160"><canvas id="chart-activity"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Avg Days to Close (Won)</div><div class="card-sub">Creación → Closed Won · por rep</div></div>
+          <div class="chart-wrap h160"><canvas id="chart-velocity"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header">
+          <div><div class="card-title">🏆 Rep Leaderboard — Full Scorecard</div><div class="card-sub">Sales Pipeline · ordenado por Win Rate · datos en vivo</div></div>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th><span class="th-tip">Rep<span class="tip-box">Nombre del rep y ranking por win rate. 🥇🥈🥉 indica su posición en el equipo.</span></span></th>
+              <th class="r" style="color:#3b82f6"><span class="th-tip">Open <span class="tip-icon">?</span><span class="tip-box">Deals activos en el pipeline — en cualquier etapa excepto Closed.</span></span></th>
+              <th class="r" style="color:#10b981"><span class="th-tip">Won <span class="tip-icon">?</span><span class="tip-box">Total de deals cerrados como ganados (Closed Won) desde el inicio.</span></span></th>
+              <th class="r" style="color:#ef4444"><span class="th-tip">Lost <span class="tip-icon">?</span><span class="tip-box">Total de deals cerrados como perdidos (Closed Lost). Usado para calcular Win Rate.</span></span></th>
+              <th style="color:#8b5cf6"><span class="th-tip">Win Rate <span class="tip-icon">?</span><span class="tip-box">% de deals cerrados que resultaron en venta. Fórmula: Won ÷ (Won + Lost). Solo cuenta deals cerrados, no abiertos.</span></span></th>
+              <th class="r" style="color:#f59e0b"><span class="th-tip">Avg Close <span class="tip-icon">?</span><span class="tip-box">Promedio de días entre creación del deal y Closed Won. Verde ≤20d · Naranja ≤45d · Rojo &gt;45d.</span></span></th>
+              <th class="r" style="color:#6366f1"><span class="th-tip">Calls 90d <span class="tip-icon">?</span><span class="tip-box">Llamadas registradas en HubSpot en los últimos 90 días.</span></span></th>
+              <th class="r" style="color:#0891b2"><span class="th-tip">Meetings 90d <span class="tip-icon">?</span><span class="tip-box">Reuniones registradas en HubSpot en los últimos 90 días. Incluye meetings logueados manualmente o via integración de calendario.</span></span></th>
+              <th class="r"><span class="th-tip">Act / Deal <span class="tip-icon">?</span><span class="tip-box">Actividad total ÷ deals abiertos (últimos 90d). Incluye: llamadas, reuniones, emails, notas y tasks completadas logueados en HubSpot. Ratio bajo (&lt;1) = deals sin trabajar.</span></span></th>
+              <th class="r"><span class="th-tip">Stalled &gt;14d <span class="tip-icon">?</span><span class="tip-box">Deals abiertos sin modificación en HubSpot en más de 14 días. Candidatos a perder si no se activa seguimiento.</span></span></th>
+            </tr>
+          </thead>
+          <tbody id="scorecard-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- REP DETAIL -->
+    <div class="tab-content" id="tab-reps">
+      <div class="section-title">👤 Individual Rep Breakdown</div>
+      <div id="rep-detail-content"></div>
+    </div>
+
+    <!-- PIPELINE -->
+    <div class="tab-content" id="tab-pipeline">
+      <div class="section-title">🔀 Pipeline Stage Analysis</div>
+      <div class="grid-2" style="margin-bottom:16px">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Open Deals by Stage</div><div class="card-sub">Distribución actual</div></div>
+          <div class="chart-wrap h200"><canvas id="chart-stage-dist"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Stage × Rep Heatmap</div><div class="card-sub">Deals abiertos por celda</div></div>
+          <div style="padding:14px;overflow-x:auto"><div id="stage-heatmap"></div></div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-header"><div class="card-title">Stage Breakdown — Full Detail</div><div class="card-sub">Deals abiertos · Sales Pipeline</div></div>
+        <div id="stage-table-wrap"></div>
+      </div>
+    </div>
+
+    <!-- DEALS AT RISK (fusión stalled + riesgo) -->
+    <div class="tab-content" id="tab-risk">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:0">⚠️ Deals at Risk — Sin actividad 14+ días</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:11px;color:#64748b;font-weight:600">Filtrar por rep:</span>
+          <select id="risk-filter" onchange="filterRisk()" style="border:1.5px solid #e5e7eb;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:#0f172a;background:#fff;cursor:pointer;outline:none">
+            <option value="all">Todos</option>
+            <option value="80988946">Will Frith</option>
+            <option value="312248717">Daniel Mendoza</option>
+            <option value="469220097">Marcos Iglesias</option>
+            <option value="294190969">Jordan Scherer</option>
+          </select>
+        </div>
+      </div>
+      <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
+        <div class="kpi-card amber"><div class="kpi-label">Total at Risk</div><div class="kpi-value" id="r-total">—</div><div class="kpi-sub">&gt;14 días sin actividad</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Críticos (&gt;30d)</div><div class="kpi-value" id="r-critical">—</div><div class="kpi-sub">Acción urgente</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">% Pipeline Abierto</div><div class="kpi-value" id="r-pct">—</div><div class="kpi-sub">At risk vs total open</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Avg Días Parado</div><div class="kpi-value" id="r-avg">—</div><div class="kpi-sub">Deals at risk</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Revenue at Risk</div><div class="kpi-value" id="r-revenue">—</div><div class="kpi-sub">Amount total stalled</div></div>
+      </div>
+      <div id="risk-content"></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const PORTAL = '22533061';
+const HS_APP = `https://app.hubspot.com/contacts/${PORTAL}/record/0-3/`;
+const PROXY = 'https://super-limit-2f74.marketing-heroe.workers.dev';
+
+const OWNERS = {
+  '80988946':  { name:'Will Frith',      initials:'WF', color:'#6366f1' },
+  '312248717': { name:'Daniel Mendoza',  initials:'DM', color:'#0891b2' },
+  '469220097': { name:'Marcos Iglesias', initials:'MI', color:'#059669' },
+  '294190969': { name:'Jordan Scherer',  initials:'JS', color:'#d97706' },
+};
+
+const STAGES = {
+  'qualifiedtobuy':'Reached Out',
+  'contractsent':'Samples Sent',
+  '101574053':'Proposal Sent',
+  '1355805743':'Stalled Stage',
+  'closedwon':'Closed Won',
+  'closedlost':'Closed Lost',
+};
+const OPEN_STAGES = ['qualifiedtobuy','contractsent','101574053','1355805743'];
+
+const PASSWORD = 'spirit2253';
+let TOKEN = '';
+let CHARTS = {};
+let DASH_DATA = null;
+let RAW_DATA = null; // holds unfiltered full dataset
+
+window.addEventListener('DOMContentLoaded', () => {
+  const unlocked = localStorage.getItem('st_unlocked');
+  if (unlocked === '1') {
+    TOKEN = PASSWORD;
+    init();
+  }
+});
+
+function authenticate() {
+  const input = document.getElementById('token-input').value.trim();
+  if (!input) { showAuthError('Ingresa tu contraseña.'); return; }
+  if (input !== PASSWORD) { showAuthError('Contraseña incorrecta.'); return; }
+  TOKEN = PASSWORD;
+  localStorage.setItem('st_unlocked', '1');
+  init();
+}
+
+function logout() {
+  localStorage.removeItem('st_unlocked');
+  TOKEN = '';
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('token-input').value = '';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.style.display = 'block';
+  el.textContent = '⚠️ ' + msg;
+}
+
+async function init() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'block';
+  await loadDashboard();
+}
+
+// ── API via proxy ─────────────────────────────────────────────────────────────
+async function hsGet(path) {
+  const url = `${PROXY}?path=${encodeURIComponent(path)}`;
+  const res = await fetch(url, { headers: { 'x-dashboard-key': TOKEN } });
+  if (res.status === 401) throw new Error('Token inválido — verifica tu Private App Token.');
+  if (!res.ok) throw new Error(`Error HubSpot API: ${res.status}`);
+  return res.json();
+}
+
+async function hsPost(path, body) {
+  const url = `${PROXY}?path=${encodeURIComponent(path)}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'x-dashboard-key': TOKEN, 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (res.status === 401) throw new Error('Token inválido.');
+  if (!res.ok) throw new Error(`Error HubSpot API: ${res.status}`);
+  return res.json();
+}
+
+async function fetchAllPages(path, body, cap=3000) {
+  let all = [], after = undefined;
+  while (all.length < cap) {
+    const payload = { ...body, limit: 200 };
+    if (after) payload.after = after;
+    const r = await hsPost(path, payload);
+    all = all.concat(r.results || []);
+    const next = r.paging?.next?.after;
+    if (!next || !r.results?.length) break;
+    after = next;
+  }
+  return all;
+}
+
+// ── LOAD ──────────────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  showLoading(true);
+  setProgress('Cargando deals...');
+  const btn = document.getElementById('refresh-btn');
+  if (btn) btn.disabled = true;
+
+  try {
+    const deals = await fetchAllPages('/crm/v3/objects/deals/search', {
+      filterGroups: [{ filters: [{ propertyName:'pipeline', operator:'EQ', value:'default' }] }],
+      properties: ['dealname','dealstage','hubspot_owner_id','createdate','closedate',
+                   'hs_lastmodifieddate','hs_is_closed_won','hs_is_closed','hs_days_to_close','amount','hs_date_entered_closedwon'],
+      sorts: [{ propertyName:'createdate', direction:'DESCENDING' }]
+    }, 4000);
+
+    setProgress(`${deals.length} deals cargados. Cargando actividades...`);
+    const since2026 = '2026-01-01T00:00:00.000Z';
+
+    let calls = [];
+    try {
+      calls = await fetchAllPages('/crm/v3/objects/calls/search', {
+        filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
+        properties: ['hubspot_owner_id','hs_timestamp','hs_call_status']
+      }, 2000);
+    } catch(e) { console.warn('Calls no disponibles:', e.message); }
+
+    setProgress('Cargando meetings...');
+    let meetings = [];
+    try {
+      meetings = await fetchAllPages('/crm/v3/objects/meetings/search', {
+        filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
+        properties: ['hubspot_owner_id','hs_timestamp','hs_meeting_outcome']
+      }, 2000);
+    } catch(e) { console.warn('Meetings no disponibles:', e.message); }
+
+    setProgress('Cargando emails...');
+    let emails = [];
+    try {
+      emails = await fetchAllPages('/crm/v3/objects/emails/search', {
+        filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
+        properties: ['hubspot_owner_id','hs_timestamp','hs_email_direction']
+      }, 2000);
+    } catch(e) { console.warn('Emails no disponibles:', e.message); }
+
+    setProgress('Cargando notas y tasks...');
+    let notes = [];
+    try {
+      notes = await fetchAllPages('/crm/v3/objects/notes/search', {
+        filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
+        properties: ['hubspot_owner_id','hs_timestamp']
+      }, 2000);
+    } catch(e) { console.warn('Notes no disponibles:', e.message); }
+
+    let tasks = [];
+    try {
+      tasks = await fetchAllPages('/crm/v3/objects/tasks/search', {
+        filterGroups: [{ filters: [
+          { propertyName:'hs_timestamp', operator:'GTE', value: since2026 },
+          { propertyName:'hs_task_status', operator:'EQ', value:'COMPLETED' }
+        ]}],
+        properties: ['hubspot_owner_id','hs_timestamp','hs_task_status']
+      }, 2000);
+    } catch(e) { console.warn('Tasks no disponibles:', e.message); }
+
+    setProgress('Procesando datos...');
+    // Store raw data for quarter filtering
+    RAW_DATA = { deals, calls, meetings, emails, notes, tasks };
+    DASH_DATA = processData(deals, calls, meetings, emails, notes, tasks);
+
+    renderAll(DASH_DATA);
+
+    document.getElementById('last-updated').textContent =
+      'Actualizado: ' + new Date().toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+    document.getElementById('dashboard').style.display = 'block';
+    showLoading(false);
+  } catch(err) {
+    showLoading(false);
+    console.error('Dashboard error:', err);
+    alert('Error cargando datos: ' + err.message + '\n\nVerifica que el token sea correcto y que el proxy esté activo.');
+  }
+  if (btn) btn.disabled = false;
+}
+
+// ── REVENUE PER REP (companies by owner → orders) — fast version ──────────────
+async function loadRepRevenue() {
+  const ownerIds = Object.keys(OWNERS);
+  const result = {};
+  ownerIds.forEach(id => { result[id] = { totalRevenue: 0 }; });
+
+  // Fetch all companies with owner = one of our reps, in one paginated call
+  const companies = await fetchAllPages('/crm/v3/objects/companies/search', {
+    filterGroups: ownerIds.map(id => ({
+      filters: [{ propertyName: 'hubspot_owner_id', operator: 'EQ', value: id }]
+    })),
+    properties: ['hubspot_owner_id'],
+  }, 3000);
+
+  // For each company get associated orders — batch by 15 in parallel
+  const BATCH = 15;
+  for (let i = 0; i < companies.length; i += BATCH) {
+    const batch = companies.slice(i, i + BATCH);
+    await Promise.all(batch.map(async company => {
+      const ownerId = company.properties.hubspot_owner_id;
+      if (!result[ownerId]) return;
+      try {
+        const assoc = await hsGet(`/crm/v4/objects/companies/${company.id}/associations/orders`);
+        const orderIds = (assoc.results || []).map(r => r.toObjectId);
+        if (!orderIds.length) return;
+        // Batch read order amounts (max 100 per call)
+        for (let j = 0; j < orderIds.length; j += 100) {
+          const r = await hsPost('/crm/v3/objects/orders/batch/read', {
+            inputs: orderIds.slice(j, j + 100).map(id => ({ id: String(id) })),
+            properties: ['hs_total_price']
+          });
+          (r.results || []).forEach(o => {
+            const v = parseFloat(o.properties?.hs_total_price);
+            if (!isNaN(v) && v > 0) result[ownerId].totalRevenue += v;
+          });
+        }
+      } catch(e) { /* skip individual company errors */ }
+    }));
+  }
+  return result;
+}
+
+// ── PROCESS ───────────────────────────────────────────────────────────────────
+function processData(deals, calls, meetings, emails=[], notes=[], tasks=[]) {
+  const today = new Date();
+  const ownerIds = Object.keys(OWNERS);
+  const reps = {};
+  ownerIds.forEach(id => {
+    reps[id] = { open:[], won:[], lost:[], stalled:[], closeDays:[], calls:0, meetings:0, emails:0, notes:0, tasks:0 };
+  });
+
+  deals.forEach(d => {
+    const p = d.properties;
+    const oid = p.hubspot_owner_id;
+    if (!reps[oid]) return;
+    const isWon = p.hs_is_closed_won === 'true';
+    const isClosed = p.hs_is_closed === 'true';
+    const isLost = isClosed && !isWon;
+
+    if (isWon) {
+      reps[oid].won.push(d);
+      // Prefer HubSpot's field, fall back to manual calc from createdate→closedate
+      let cd = parseFloat(p.hs_days_to_close);
+      if (isNaN(cd) || cd < 0) {
+        if (p.createdate && p.closedate) {
+          cd = Math.round((new Date(p.closedate) - new Date(p.createdate)) / 864e5);
+        }
+      }
+      if (!isNaN(cd) && cd >= 0) reps[oid].closeDays.push(cd);
+    } else if (isLost) {
+      reps[oid].lost.push(d);
+    } else {
+      reps[oid].open.push(d);
+      const lastMod = p.hs_lastmodifieddate ? new Date(p.hs_lastmodifieddate) : null;
+      if (lastMod) {
+        const daysAgo = Math.round((today - lastMod) / 864e5);
+        if (daysAgo > 14) reps[oid].stalled.push({ deal:d, daysStalled:daysAgo });
+      }
+    }
+  });
+
+  calls.forEach(c => { const oid = c.properties.hubspot_owner_id; if (reps[oid]) reps[oid].calls++; });
+  meetings.forEach(m => { const oid = m.properties.hubspot_owner_id; if (reps[oid]) reps[oid].meetings++; });
+  emails.forEach(e => { const oid = e.properties.hubspot_owner_id; if (reps[oid]) reps[oid].emails++; });
+  notes.forEach(n => { const oid = n.properties.hubspot_owner_id; if (reps[oid]) reps[oid].notes++; });
+  tasks.forEach(t => { const oid = t.properties.hubspot_owner_id; if (reps[oid]) reps[oid].tasks++; });
+
+  const team = { open:0, won:0, lost:0, stalled:0, calls:0, meetings:0, emails:0, notes:0, tasks:0, closeDays:[] };
+  ownerIds.forEach(id => {
+    team.open += reps[id].open.length;
+    team.won += reps[id].won.length;
+    team.lost += reps[id].lost.length;
+    team.stalled += reps[id].stalled.length;
+    team.calls += reps[id].calls;
+    team.meetings += reps[id].meetings;
+    team.emails += reps[id].emails;
+    team.notes += reps[id].notes;
+    team.tasks += reps[id].tasks;
+    team.closeDays = team.closeDays.concat(reps[id].closeDays);
+  });
+
+  return { reps, team };
+}
+
+// ── RENDER ALL ────────────────────────────────────────────────────────────────
+function renderAll(d) {
+  renderOverview(d);
+  renderRepDetail(d);
+  renderPipeline(d);
+  renderRisk(d);
+}
+
+// ── SCORECARD (called on load + again when revenue arrives) ──────────────────
+function renderScorecard({ reps }) {
+  const ownerIds = Object.keys(OWNERS);
+
+  const scorecardData = ownerIds.map(id => {
+    const r = reps[id];
+    const closed = r.won.length + r.lost.length;
+    const wr2 = closed > 0 ? Math.round(r.won.length / closed * 100) : null;
+    const avgD = r.closeDays.length ? Math.round(r.closeDays.reduce((a,b)=>a+b,0)/r.closeDays.length) : null;
+    return { id, r, wr2, avgD };
+  }).sort((a,b) => (b.wr2??-1) - (a.wr2??-1));
+
+  const tbody = document.getElementById('scorecard-body');
+  tbody.innerHTML = '';
+  let rank = 1;
+  scorecardData.forEach(({ id, r, wr2, avgD }) => {
+    const col = OWNERS[id].color;
+    const wrPct = wr2 ?? 0;
+    const velCls = avgD===null?'':avgD<=20?'vel-fast':avgD<=45?'vel-mid':'vel-slow';
+    const totalAct = r.calls + r.meetings + r.emails + r.notes + r.tasks;
+    const actPerDeal = r.open.length > 0 ? (totalAct / Math.max(r.open.length,1)).toFixed(1) : '—';
+    const medal = rank===1?'🥇':rank===2?'🥈':rank===3?'🥉':`#${rank}`;
+    rank++;
+    tbody.innerHTML += `<tr>
+      <td><div class="rep-cell">
+        <span style="font-size:15px;margin-right:6px;flex-shrink:0">${medal}</span>
+        <span class="rep-av" style="background:${col}">${OWNERS[id].initials}</span>
+        <strong>${OWNERS[id].name}</strong>
+      </div></td>
+      <td class="r"><span class="badge b-open">${r.open.length}</span></td>
+      <td class="r"><span class="badge b-won">${r.won.length}</span></td>
+      <td class="r"><span class="badge b-lost">${r.lost.length}</span></td>
+      <td style="min-width:130px"><div class="wr-wrap"><div class="wr-bg"><div class="wr-fill" style="width:${wrPct}%;background:${col};height:6px;border-radius:4px"></div></div><span class="wr-pct" style="color:${col};font-size:13px;font-weight:900">${wr2!==null?wrPct+'%':'—'}</span></div></td>
+      <td class="r"><span class="${velCls}">${avgD!==null?avgD+'d':'—'}</span></td>
+      <td class="r"><span class="badge b-act">${r.calls}</span></td>
+      <td class="r"><span class="badge b-act">${r.meetings}</span></td>
+      <td class="r"><span class="badge b-neutral">${actPerDeal}</span></td>
+      <td class="r">${r.stalled.length>0?`<span class="badge b-warn">${r.stalled.length}</span>`:'<span style="color:#ccc">0</span>'}</td>
+    </tr>`;
+  });
+}
+
+// ── OVERVIEW ──────────────────────────────────────────────────────────────────
+function renderOverview({ reps, team }) {
+  const ownerIds = Object.keys(OWNERS);
+  const labels = ownerIds.map(id => OWNERS[id].name.split(' ')[0]);
+  const colors = ownerIds.map(id => OWNERS[id].color);
+
+  setText('kpi-open', team.open);
+  setText('kpi-won', team.won);
+  setText('kpi-lost', team.lost);
+  setText('kpi-stalled', team.stalled);
+  const wr = team.won+team.lost>0 ? Math.round(team.won/(team.won+team.lost)*100) : 0;
+  setText('kpi-wr', `Win rate: ${wr}%`);
+  const avgClose = team.closeDays.length ? Math.round(team.closeDays.reduce((a,b)=>a+b,0)/team.closeDays.length) : null;
+  setText('kpi-velocity', avgClose !== null ? avgClose+'d' : '—');
+
+  makeChart('chart-rep-deals','bar',{
+    labels,
+    datasets:[
+      { label:'Open', data:ownerIds.map(id=>reps[id].open.length), backgroundColor:colors.map(c=>c+'cc'), borderRadius:4 },
+      { label:'Won',  data:ownerIds.map(id=>reps[id].won.length),  backgroundColor:'#10b981bb', borderRadius:4 },
+      { label:'Lost', data:ownerIds.map(id=>reps[id].lost.length), backgroundColor:'#ef4444bb', borderRadius:4 },
+    ]
+  },{ responsive:true,maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}, scales:{x:{stacked:true,ticks:{font:{size:10}}},y:{stacked:true,ticks:{font:{size:10}},beginAtZero:true}} });
+
+  const winRates = ownerIds.map(id => { const c=reps[id].won.length+reps[id].lost.length; return c>0?Math.round(reps[id].won.length/c*100):0; });
+  makeChart('chart-winrate','bar',{ labels, datasets:[{label:'Win %',data:winRates,backgroundColor:colors.map(c=>c+'cc'),borderRadius:6}] },
+    { indexAxis:'y',responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'%'}}}, scales:{x:{max:100,ticks:{callback:v=>v+'%',font:{size:10}}},y:{ticks:{font:{size:11}}}} });
+
+  makeChart('chart-activity','bar',{
+    labels,
+    datasets:[
+      { label:'Calls',    data:ownerIds.map(id=>reps[id].calls),    backgroundColor:'#6366f1cc', borderRadius:2 },
+      { label:'Meetings', data:ownerIds.map(id=>reps[id].meetings), backgroundColor:'#10b981cc', borderRadius:2 },
+      { label:'Emails',   data:ownerIds.map(id=>reps[id].emails),   backgroundColor:'#0891b2cc', borderRadius:2 },
+      { label:'Notas',    data:ownerIds.map(id=>reps[id].notes),    backgroundColor:'#f59e0bcc', borderRadius:2 },
+      { label:'Tasks',    data:ownerIds.map(id=>reps[id].tasks),    backgroundColor:'#8b5cf6cc', borderRadius:2 },
+    ]
+  },{ responsive:true,maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}, scales:{x:{stacked:true,ticks:{font:{size:10}}},y:{stacked:true,ticks:{font:{size:10}},beginAtZero:true}} });
+
+  const vels = ownerIds.map(id => { const arr=reps[id].closeDays; return arr.length?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0; });
+  makeChart('chart-velocity','bar',{ labels, datasets:[{label:'Avg Days',data:vels,backgroundColor:colors.map(c=>c+'cc'),borderRadius:6}] },
+    { responsive:true,maintainAspectRatio:false, plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.y+'d'}}}, scales:{x:{ticks:{font:{size:10}}},y:{ticks:{font:{size:10},callback:v=>v+'d'},beginAtZero:true}} });
+
+  renderScorecard({ reps });
+}
+
+// ── REP DETAIL ────────────────────────────────────────────────────────────────
+function renderRepDetail({ reps }) {
+  const ownerIds = Object.keys(OWNERS);
+  let html = '';
+  ownerIds.forEach(id => {
+    const r = reps[id]; const col = OWNERS[id].color;
+    const closed = r.won.length+r.lost.length;
+    const wr = closed>0?Math.round(r.won.length/closed*100):null;
+    const avgD = r.closeDays.length?Math.round(r.closeDays.reduce((a,b)=>a+b,0)/r.closeDays.length):null;
+    const stageRows = OPEN_STAGES.map(s=>`<tr><td>${STAGES[s]||s}</td><td class="r"><span class="badge b-open">${r.open.filter(d=>d.properties.dealstage===s).length}</span></td></tr>`).join('');
+    const stalledRows = r.stalled.slice(0,5).map(({deal,daysStalled})=>{
+      const p=deal.properties; const cls=daysStalled>=30?'sd-hot':'sd-warn';
+      return `<tr><td><a href="${HS_APP}${deal.id}" target="_blank" style="font-weight:600;color:#0f172a">${p.dealname||'—'}</a></td><td>${STAGES[p.dealstage]||p.dealstage}</td><td class="r"><span class="stalled-days ${cls}">${daysStalled}d</span></td></tr>`;
+    }).join('');
+
+    html += `<div class="card" style="margin-bottom:16px">
+      <div class="card-header" style="border-left:4px solid ${col}">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="rep-av" style="background:${col};width:36px;height:36px;font-size:13px">${OWNERS[id].initials}</span>
+          <div><div class="card-title">${OWNERS[id].name}</div><div class="card-sub">Sales Rep · Spirit Tea</div></div>
+        </div>
+        <div style="display:flex;gap:20px;text-align:center">
+          ${[[r.open.length,col,'Open'],[r.won.length,'#10b981','Won'],[r.lost.length,'#ef4444','Lost'],
+             [wr!==null?wr+'%':'—','#8b5cf6','Win Rate'],[avgD!==null?avgD+'d':'—',avgD===null?'#94a3b8':avgD<=20?'#059669':avgD<=45?'#d97706':'#dc2626','Avg Close'],
+             [r.calls,'#6366f1','Calls 90d'],[r.meetings,'#0891b2','Meetings 90d']]
+            .map(([v,c,l])=>`<div><div style="font-size:20px;font-weight:900;color:${c}">${v}</div><div style="font-size:10px;color:#94a3b8;text-transform:uppercase">${l}</div></div>`).join('')}
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;border-top:1px solid #f1f5f9">
+        <div style="padding:14px;border-right:1px solid #f1f5f9">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:8px">Open Deals by Stage</div>
+          <table>${stageRows}</table>
+        </div>
+        <div style="padding:14px">
+          <div style="font-size:11px;font-weight:700;color:#94a3b8;text-transform:uppercase;margin-bottom:8px">Stalled Deals (top ${Math.min(r.stalled.length,5)}${r.stalled.length>5?' of '+r.stalled.length:''})</div>
+          ${r.stalled.length?`<table><thead><tr><th>Deal</th><th>Stage</th><th class="r">Stalled</th></tr></thead><tbody>${stalledRows}</tbody></table>`:'<div style="color:#94a3b8;font-size:12px;padding:8px 0">✅ No stalled deals</div>'}
+        </div>
+      </div>
+    </div>`;
+  });
+  document.getElementById('rep-detail-content').innerHTML = html;
+}
+
+// ── PIPELINE ──────────────────────────────────────────────────────────────────
+function renderPipeline({ reps }) {
+  const ownerIds = Object.keys(OWNERS);
+  const stageCounts = OPEN_STAGES.map(s=>ownerIds.reduce((sum,id)=>sum+reps[id].open.filter(d=>d.properties.dealstage===s).length,0));
+  makeChart('chart-stage-dist','doughnut',{
+    labels:OPEN_STAGES.map(s=>STAGES[s]||s),
+    datasets:[{data:stageCounts,backgroundColor:['#6366f1','#0891b2','#10b981','#f59e0b'],borderWidth:2}]
+  },{ responsive:true,maintainAspectRatio:false, plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}} });
+
+  let h=`<table style="width:100%;border-collapse:collapse"><thead><tr><th style="text-align:left;padding:6px 10px;font-size:10px;color:#64748b;text-transform:uppercase">Stage</th>`;
+  ownerIds.forEach(id=>{ h+=`<th style="text-align:center;padding:6px 10px;font-size:10px;color:${OWNERS[id].color};text-transform:uppercase">${OWNERS[id].name.split(' ')[0]}</th>`; });
+  h+='</tr></thead><tbody>';
+  OPEN_STAGES.forEach(s=>{
+    h+=`<tr><td style="padding:8px 10px;font-size:12px;font-weight:600">${STAGES[s]}</td>`;
+    ownerIds.forEach(id=>{
+      const cnt=reps[id].open.filter(d=>d.properties.dealstage===s).length;
+      const maxVal=Math.max(...ownerIds.map(i=>reps[i].open.filter(d=>d.properties.dealstage===s).length));
+      const intensity=maxVal>0?cnt/maxVal:0;
+      const col=OWNERS[id].color;
+      const alpha=Math.round(intensity*180+30).toString(16).padStart(2,'0');
+      const bg=cnt===0?'#f8fafc':col+alpha;
+      const tc=intensity>0.6?'#fff':'#1e293b';
+      h+=`<td style="text-align:center;padding:8px 14px;background:${bg};color:${tc};font-weight:800;font-size:14px">${cnt||'—'}</td>`;
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  document.getElementById('stage-heatmap').innerHTML=h;
+
+  let t=`<table><thead><tr><th>Stage</th>`;
+  ownerIds.forEach(id=>{t+=`<th class="r">${OWNERS[id].name.split(' ')[0]}</th>`;});
+  t+=`<th class="r">Total</th></tr></thead><tbody>`;
+  OPEN_STAGES.forEach((s,i)=>{
+    let total=0; t+=`<tr style="background:${i%2?'#fafafa':'#fff'}"><td><strong>${STAGES[s]}</strong></td>`;
+    ownerIds.forEach(id=>{const cnt=reps[id].open.filter(d=>d.properties.dealstage===s).length;total+=cnt;t+=`<td class="r">${cnt>0?`<span class="badge b-open">${cnt}</span>`:'<span style="color:#e5e7eb">—</span>'}</td>`;});
+    t+=`<td class="r"><strong>${total}</strong></td></tr>`;
+  });
+  t+='</tbody></table>';
+  document.getElementById('stage-table-wrap').innerHTML=t;
+}
+
+// ── DEALS AT RISK (fusión stalled + riesgo + revenue) ─────────────────────────
+function renderRisk({ reps, team }, filterRep='all') {
+  const ownerIds = Object.keys(OWNERS);
+
+  // KPIs globales (siempre sobre todos los reps)
+  let totalStalled=0, critical=0, allDays=[], totalRevenue=0;
+  ownerIds.forEach(id=>{
+    reps[id].stalled.forEach(({deal, daysStalled})=>{
+      totalStalled++;
+      if(daysStalled>=30) critical++;
+      allDays.push(daysStalled);
+      const amt = parseFloat(deal.properties.amount);
+      if(!isNaN(amt)) totalRevenue += amt;
+    });
+  });
+  const avgDays = allDays.length ? Math.round(allDays.reduce((a,b)=>a+b,0)/allDays.length) : 0;
+  const pct = team.open>0 ? Math.round(totalStalled/team.open*100) : 0;
+  const revFmt = totalRevenue>0 ? '$'+totalRevenue.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
+
+  setText('r-total', totalStalled);
+  setText('r-critical', critical);
+  setText('r-pct', pct+'%');
+  setText('r-avg', avgDays>0 ? avgDays+'d' : '—');
+  setText('r-revenue', revFmt);
+
+  // Contenido filtrado por rep
+  const idsToShow = filterRep==='all' ? ownerIds : ownerIds.filter(id=>id===filterRep);
+  let allStalled = [];
+  idsToShow.forEach(id=>{
+    reps[id].stalled.forEach(s=>{ allStalled.push({...s, ownerId:id}); });
+  });
+  allStalled.sort((a,b)=>b.daysStalled-a.daysStalled);
+
+  if(!allStalled.length){
+    document.getElementById('risk-content').innerHTML='<div class="empty-state">✅ No hay deals at risk para este rep.</div>';
+    return;
+  }
+
+  let html='';
+  idsToShow.forEach(id=>{
+    const repDeals = allStalled.filter(s=>s.ownerId===id);
+    if(!repDeals.length) return;
+    const col = OWNERS[id].color;
+    const repRevenue = repDeals.reduce((sum,{deal})=>{ const a=parseFloat(deal.properties.amount); return sum+(isNaN(a)?0:a); },0);
+    const repRevFmt = repRevenue>0 ? '$'+repRevenue.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
+    html+=`<div class="rep-group-title" style="color:${col}">${OWNERS[id].name} — ${repDeals.length} deal${repDeals.length>1?'s':''} at risk · <span style="color:#ef4444">${repRevFmt} en riesgo</span></div><div class="risk-grid">`;
+    repDeals.forEach(({deal,daysStalled})=>{
+      const p=deal.properties;
+      const isCrit=daysStalled>=30;
+      const amt=parseFloat(p.amount);
+      const amtFmt=!isNaN(amt)&&amt>0?'$'+amt.toLocaleString('en-US',{maximumFractionDigits:0}):'—';
+      html+=`<div class="risk-card ${isCrit?'':'medium'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+          <div class="risk-deal"><a href="${HS_APP}${deal.id}" target="_blank">${p.dealname||'—'}</a></div>
+          <span class="risk-tag ${isCrit?'rt-critical':'rt-warning'}">${isCrit?'🔴 CRÍTICO':'🟡 RIESGO'}</span>
+        </div>
+        <div class="risk-meta">📍 ${STAGES[p.dealstage]||p.dealstage}</div>
+        <div class="risk-meta">📅 Creado: ${p.createdate?new Date(p.createdate).toLocaleDateString('es-ES'):'—'}</div>
+        ${amtFmt!=='—'?`<div class="risk-meta" style="margin-top:4px;font-weight:700;color:#0f172a">💰 ${amtFmt}</div>`:''}
+        <div class="risk-meta" style="margin-top:6px;font-weight:700;color:${isCrit?'#b91c1c':'#92400e'}">${daysStalled}d sin actividad — ${isCrit?'acción urgente':'seguimiento esta semana'}</div>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('risk-content').innerHTML=html;
+}
+
+// ── FILTERS ───────────────────────────────────────────────────────────────────
+function filterRisk() {
+  if (!DASH_DATA) return;
+  const sel = document.getElementById('risk-filter').value;
+  renderRisk(DASH_DATA, sel);
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function switchTab(name,btn){
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+}
+function makeChart(id,type,data,options){
+  if(CHARTS[id]) CHARTS[id].destroy();
+  const ctx=document.getElementById(id)?.getContext('2d');
+  if(!ctx) return;
+  CHARTS[id]=new Chart(ctx,{type,data,options});
+}
+function setText(id,val){ const el=document.getElementById(id); if(el) el.textContent=val; }
+function showLoading(show){ document.getElementById('loading-overlay').style.display=show?'flex':'none'; }
+function setProgress(msg){ const el=document.getElementById('load-progress'); if(el) el.textContent=msg; }
+
+// ── QUARTER FILTER ────────────────────────────────────────────────────────────
+const Q_RANGES = {
+  q1: { start: new Date('2026-01-01'), end: new Date('2026-03-31T23:59:59') },
+  q2: { start: new Date('2026-04-01'), end: new Date('2026-06-30T23:59:59') },
+  q3: { start: new Date('2026-07-01'), end: new Date('2026-09-30T23:59:59') },
+  q4: { start: new Date('2026-10-01'), end: new Date('2026-12-31T23:59:59') },
+};
+
+const Q_LABELS = { all:'All Time', q1:'Q1 2026', q2:'Q2 2026', q3:'Q3 2026', q4:'Q4 2026' };
+
+let activeQs = new Set(['all']); // current selection
+
+function toggleQ(btn) {
+  const q = btn.dataset.q;
+
+  if (q === 'all') {
+    // Selecting All Time clears individual quarters
+    activeQs = new Set(['all']);
+  } else {
+    // Deselect All Time when picking a specific quarter
+    activeQs.delete('all');
+    if (activeQs.has(q)) {
+      activeQs.delete(q);
+      // If nothing left, fall back to All Time
+      if (activeQs.size === 0) activeQs.add('all');
+    } else {
+      activeQs.add(q);
+    }
+  }
+
+  // Update button states
+  document.querySelectorAll('.q-btn').forEach(b => {
+    b.classList.toggle('q-active', activeQs.has(b.dataset.q));
+  });
+
+  // Update label
+  const label = activeQs.has('all')
+    ? 'Mostrando: All Time'
+    : 'Mostrando: ' + [...activeQs].sort().map(k => Q_LABELS[k]).join(' + ');
+  document.getElementById('q-label').textContent = label;
+
+  applyQuarterFilter();
+}
+
+function getActiveDateRange() {
+  if (activeQs.has('all')) return null; // no filter
+  const starts = [], ends = [];
+  activeQs.forEach(q => {
+    starts.push(Q_RANGES[q].start);
+    ends.push(Q_RANGES[q].end);
+  });
+  return {
+    start: new Date(Math.min(...starts)),
+    end:   new Date(Math.max(...ends)),
+    // For multi-quarter: a date is in range if it falls in ANY of the selected quarters
+    includes(date) {
+      if (!date) return false;
+      const d = new Date(date);
+      for (const q of activeQs) {
+        if (d >= Q_RANGES[q].start && d <= Q_RANGES[q].end) return true;
+      }
+      return false;
+    }
+  };
+}
+
+function applyQuarterFilter() {
+  if (!RAW_DATA) return;
+  const range = getActiveDateRange();
+
+  if (!range) {
+    // All Time — use full dataset
+    DASH_DATA = processData(
+      RAW_DATA.deals, RAW_DATA.calls, RAW_DATA.meetings,
+      RAW_DATA.emails, RAW_DATA.notes, RAW_DATA.tasks
+    );
+  } else {
+    // Filter deals: include if createdate is in range, OR if deal was won in range,
+    // OR if deal is still open (open deals always show regardless of quarter)
+    const deals = RAW_DATA.deals.filter(d => {
+      const p = d.properties;
+      const isWon   = p.hs_is_closed_won === 'true';
+      const isClosed = p.hs_is_closed === 'true';
+      const isOpen  = !isClosed;
+
+      if (isOpen) {
+        // Open deals: show if createdate falls in range
+        return range.includes(p.createdate);
+      } else if (isWon) {
+        // Won deals: filter by closedate (when it was actually won)
+        const closeRef = p.hs_date_entered_closedwon || p.closedate;
+        return range.includes(closeRef);
+      } else {
+        // Lost deals: filter by closedate
+        return range.includes(p.closedate);
+      }
+    });
+
+    // Filter activities by timestamp within any active quarter
+    const filterAct = arr => arr.filter(a => range.includes(a.properties?.hs_timestamp));
+
+    DASH_DATA = processData(
+      deals,
+      filterAct(RAW_DATA.calls),
+      filterAct(RAW_DATA.meetings),
+      filterAct(RAW_DATA.emails),
+      filterAct(RAW_DATA.notes),
+      filterAct(RAW_DATA.tasks)
+    );
+  }
+
+  renderAll(DASH_DATA);
+  // Re-apply risk filter if one is active
+  const riskSel = document.getElementById('risk-filter')?.value;
+  if (riskSel && riskSel !== 'all') renderRisk(DASH_DATA, riskSel);
+}
+</script>
+</body>
+</html>
+                                                                                     
