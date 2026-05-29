@@ -156,11 +156,11 @@ tr:hover td{background:#fafafa;}
 <div id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">Spirit <span>Tea</span></div>
-    <div class="auth-sub">Sales Performance Dashboard · Acceso restringido</div>
-    <div class="auth-label">Contraseña</div>
-    <input class="auth-input" type="password" id="token-input" placeholder="Ingresa tu contraseña" autocomplete="off">
-    <div class="auth-hint">Contacta a tu administrador si no tienes acceso.</div>
-    <button class="auth-btn" onclick="authenticate()">Cargar Dashboard</button>
+    <div class="auth-sub">Sales Performance Dashboard · Restricted access</div>
+    <div class="auth-label">Password</div>
+    <input class="auth-input" type="password" id="token-input" placeholder="Enter your password" autocomplete="off">
+    <div class="auth-hint">Contact your administrator if you don't have access.</div>
+    <button class="auth-btn" onclick="authenticate()">Load Dashboard</button>
     <div id="auth-error"></div>
   </div>
 </div>
@@ -168,8 +168,8 @@ tr:hover td{background:#fafafa;}
 <!-- LOADING -->
 <div id="loading-overlay">
   <div class="spinner"></div>
-  <div class="load-text">Cargando datos desde HubSpot...</div>
-  <div class="load-progress" id="load-progress">Iniciando...</div>
+  <div class="load-text">Loading data from HubSpot...</div>
+  <div class="load-progress" id="load-progress">Starting...</div>
 </div>
 
 <!-- DASHBOARD -->
@@ -182,15 +182,15 @@ tr:hover td{background:#fafafa;}
     </div>
     <div class="header-right">
       <span id="last-updated">—</span>
-      <button class="btn-refresh" id="refresh-btn" onclick="loadDashboard()">↻ Actualizar</button>
-      <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+      <button class="btn-refresh" id="refresh-btn" onclick="loadDashboard()">↻ Refresh</button>
+      <button class="btn-logout" onclick="logout()">Log Out</button>
     </div>
   </header>
 
   <main>
     <!-- QUARTER FILTER -->
     <div id="quarter-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:10px 16px;flex-wrap:wrap;">
-      <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">📅 Período:</span>
+      <span style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;">📅 Period:</span>
       <div id="q-btns" style="display:flex;gap:6px;flex-wrap:wrap;">
         <button class="q-btn q-active" data-q="all"   onclick="toggleQ(this)">All Time</button>
         <button class="q-btn"          data-q="q1"    onclick="toggleQ(this)">Q1 2026 <span style="font-size:10px;color:inherit;opacity:.7">Jan–Mar</span></button>
@@ -198,7 +198,7 @@ tr:hover td{background:#fafafa;}
         <button class="q-btn"          data-q="q3"    onclick="toggleQ(this)">Q3 2026 <span style="font-size:10px;color:inherit;opacity:.7">Jul–Sep</span></button>
         <button class="q-btn"          data-q="q4"    onclick="toggleQ(this)">Q4 2026 <span style="font-size:10px;color:inherit;opacity:.7">Oct–Dec</span></button>
       </div>
-      <span style="font-size:11px;color:#94a3b8;margin-left:4px;">Puedes seleccionar varios quarters a la vez</span>
+      <span style="font-size:11px;color:#94a3b8;margin-left:4px;">You can select multiple quarters at once</span>
       <span id="q-label" style="margin-left:auto;font-size:11px;font-weight:700;color:#10b981;white-space:nowrap;"></span>
     </div>
 
@@ -213,11 +213,11 @@ tr:hover td{background:#fafafa;}
     <div class="tab-content active" id="tab-overview">
       <div class="section-title">📌 Team Snapshot — All Time</div>
       <div class="kpi-grid">
-        <div class="kpi-card blue"><div class="kpi-label">Open Deals</div><div class="kpi-value" id="kpi-open">—</div><div class="kpi-sub">Pipeline activo</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">Open Deals</div><div class="kpi-value" id="kpi-open">—</div><div class="kpi-sub">Active pipeline</div></div>
         <div class="kpi-card green"><div class="kpi-label">Closed Won</div><div class="kpi-value" id="kpi-won">—</div><div class="kpi-sub">All time</div></div>
         <div class="kpi-card red"><div class="kpi-label">Closed Lost</div><div class="kpi-value" id="kpi-lost">—</div><div class="kpi-sub" id="kpi-wr">Win rate: —</div></div>
-        <div class="kpi-card amber"><div class="kpi-label">Stalled &gt;14d</div><div class="kpi-value" id="kpi-stalled">—</div><div class="kpi-sub">Necesitan acción</div></div>
-        <div class="kpi-card purple"><div class="kpi-label">Avg Days to Close</div><div class="kpi-value" id="kpi-velocity">—</div><div class="kpi-sub">Deals cerrados (won)</div></div>
+        <div class="kpi-card amber"><div class="kpi-label">Stalled &gt;14d</div><div class="kpi-value" id="kpi-stalled">—</div><div class="kpi-sub">Needs attention</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Avg Days to Close</div><div class="kpi-value" id="kpi-velocity">—</div><div class="kpi-sub">Closed won deals</div></div>
       </div>
 
       <div class="grid-65">
@@ -226,39 +226,39 @@ tr:hover td{background:#fafafa;}
           <div class="chart-wrap h200"><canvas id="chart-rep-deals"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Win Rate by Rep</div><div class="card-sub">Solo deals cerrados</div></div>
+          <div class="card-header"><div class="card-title">Win Rate by Rep</div><div class="card-sub">Closed deals only</div></div>
           <div class="chart-wrap h200"><canvas id="chart-winrate"></canvas></div>
         </div>
       </div>
 
       <div class="grid-2">
         <div class="card">
-          <div class="card-header"><div class="card-title">Actividad — Últimos 90 días</div><div class="card-sub">Calls · Meetings · Emails · Notas · Tasks</div></div>
+          <div class="card-header"><div class="card-title">Activity — Last 90 Days</div><div class="card-sub">Calls · Meetings · Emails · Notes · Tasks</div></div>
           <div class="chart-wrap h160"><canvas id="chart-activity"></canvas></div>
         </div>
         <div class="card">
-          <div class="card-header"><div class="card-title">Avg Days to Close (Won)</div><div class="card-sub">Creación → Closed Won · por rep</div></div>
+          <div class="card-header"><div class="card-title">Avg Days to Close (Won)</div><div class="card-sub">Creation → Closed Won · by rep</div></div>
           <div class="chart-wrap h160"><canvas id="chart-velocity"></canvas></div>
         </div>
       </div>
 
       <div class="card" style="margin-bottom:16px">
         <div class="card-header">
-          <div><div class="card-title">🏆 Rep Leaderboard — Full Scorecard</div><div class="card-sub">Sales Pipeline · ordenado por Win Rate · datos en vivo</div></div>
+          <div><div class="card-title">🏆 Rep Leaderboard — Full Scorecard</div><div class="card-sub">Sales Pipeline · sorted by Win Rate · live data</div></div>
         </div>
         <table>
           <thead>
             <tr>
-              <th><span class="th-tip">Rep<span class="tip-box">Nombre del rep y ranking por win rate. 🥇🥈🥉 indica su posición en el equipo.</span></span></th>
-              <th class="r" style="color:#3b82f6"><span class="th-tip">Open <span class="tip-icon">?</span><span class="tip-box">Deals activos en el pipeline — en cualquier etapa excepto Closed.</span></span></th>
-              <th class="r" style="color:#10b981"><span class="th-tip">Won <span class="tip-icon">?</span><span class="tip-box">Total de deals cerrados como ganados (Closed Won) desde el inicio.</span></span></th>
-              <th class="r" style="color:#ef4444"><span class="th-tip">Lost <span class="tip-icon">?</span><span class="tip-box">Total de deals cerrados como perdidos (Closed Lost). Usado para calcular Win Rate.</span></span></th>
-              <th style="color:#8b5cf6"><span class="th-tip">Win Rate <span class="tip-icon">?</span><span class="tip-box">% de deals cerrados que resultaron en venta. Fórmula: Won ÷ (Won + Lost). Solo cuenta deals cerrados, no abiertos.</span></span></th>
-              <th class="r" style="color:#f59e0b"><span class="th-tip">Avg Close <span class="tip-icon">?</span><span class="tip-box">Promedio de días entre creación del deal y Closed Won. Verde ≤20d · Naranja ≤45d · Rojo &gt;45d.</span></span></th>
-              <th class="r" style="color:#6366f1"><span class="th-tip">Calls 90d <span class="tip-icon">?</span><span class="tip-box">Llamadas registradas en HubSpot en los últimos 90 días.</span></span></th>
-              <th class="r" style="color:#0891b2"><span class="th-tip">Meetings 90d <span class="tip-icon">?</span><span class="tip-box">Reuniones registradas en HubSpot en los últimos 90 días. Incluye meetings logueados manualmente o via integración de calendario.</span></span></th>
-              <th class="r"><span class="th-tip">Act / Deal <span class="tip-icon">?</span><span class="tip-box">Actividad total ÷ deals abiertos (últimos 90d). Incluye: llamadas, reuniones, emails, notas y tasks completadas logueados en HubSpot. Ratio bajo (&lt;1) = deals sin trabajar.</span></span></th>
-              <th class="r"><span class="th-tip">Stalled &gt;14d <span class="tip-icon">?</span><span class="tip-box">Deals abiertos sin modificación en HubSpot en más de 14 días. Candidatos a perder si no se activa seguimiento.</span></span></th>
+              <th><span class="th-tip">Rep<span class="tip-box">Rep name and ranking by win rate. 🥇🥈🥉 indicates their position on the team.</span></span></th>
+              <th class="r" style="color:#3b82f6"><span class="th-tip">Open <span class="tip-icon">?</span><span class="tip-box">Active deals in the pipeline — at any stage except Closed.</span></span></th>
+              <th class="r" style="color:#10b981"><span class="th-tip">Won <span class="tip-icon">?</span><span class="tip-box">Total deals closed as won (Closed Won) since the beginning.</span></span></th>
+              <th class="r" style="color:#ef4444"><span class="th-tip">Lost <span class="tip-icon">?</span><span class="tip-box">Total deals closed as lost (Closed Lost). Used to calculate Win Rate.</span></span></th>
+              <th style="color:#8b5cf6"><span class="th-tip">Win Rate <span class="tip-icon">?</span><span class="tip-box">% of closed deals that resulted in a sale. Formula: Won ÷ (Won + Lost). Counts closed deals only, not open ones.</span></span></th>
+              <th class="r" style="color:#f59e0b"><span class="th-tip">Avg Close <span class="tip-icon">?</span><span class="tip-box">Average days from deal creation to Closed Won. Green ≤20d · Orange ≤45d · Red &gt;45d.</span></span></th>
+              <th class="r" style="color:#6366f1"><span class="th-tip">Calls 90d <span class="tip-icon">?</span><span class="tip-box">Calls logged in HubSpot in the last 90 days.</span></span></th>
+              <th class="r" style="color:#0891b2"><span class="th-tip">Meetings 90d <span class="tip-icon">?</span><span class="tip-box">Meetings logged in HubSpot in the last 90 days. Includes manually logged and calendar-integrated meetings.</span></span></th>
+              <th class="r"><span class="th-tip">Act / Deal <span class="tip-icon">?</span><span class="tip-box">Total activity ÷ open deals (last 90d). Includes: calls, meetings, emails, notes and completed tasks logged in HubSpot. Low ratio (&lt;1) = neglected deals.</span></span></th>
+              <th class="r"><span class="th-tip">Stalled &gt;14d <span class="tip-icon">?</span><span class="tip-box">Open deals with no activity in HubSpot for more than 14 days. At risk of being lost if not followed up.</span></span></th>
             </tr>
           </thead>
           <tbody id="scorecard-body"></tbody>
@@ -294,11 +294,11 @@ tr:hover td{background:#fafafa;}
     <!-- DEALS AT RISK (fusión stalled + riesgo) -->
     <div class="tab-content" id="tab-risk">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div class="section-title" style="margin-bottom:0">⚠️ Deals at Risk — Sin actividad 14+ días</div>
+        <div class="section-title" style="margin-bottom:0">⚠️ Deals at Risk — No activity 14+ days</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-size:11px;color:#64748b;font-weight:600">Filtrar por rep:</span>
+          <span style="font-size:11px;color:#64748b;font-weight:600">Filter by rep:</span>
           <select id="risk-filter" onchange="filterRisk()" style="border:1.5px solid #e5e7eb;border-radius:7px;padding:5px 10px;font-size:12px;font-weight:600;color:#0f172a;background:#fff;cursor:pointer;outline:none">
-            <option value="all">Todos</option>
+            <option value="all">All</option>
             <option value="80988946">Will Frith</option>
             <option value="312248717">Daniel Mendoza</option>
             <option value="469220097">Marcos Iglesias</option>
@@ -307,10 +307,10 @@ tr:hover td{background:#fafafa;}
         </div>
       </div>
       <div class="kpi-grid" style="grid-template-columns:repeat(5,1fr);margin-bottom:16px">
-        <div class="kpi-card amber"><div class="kpi-label">Total at Risk</div><div class="kpi-value" id="r-total">—</div><div class="kpi-sub">&gt;14 días sin actividad</div></div>
-        <div class="kpi-card red"><div class="kpi-label">Críticos (&gt;30d)</div><div class="kpi-value" id="r-critical">—</div><div class="kpi-sub">Acción urgente</div></div>
-        <div class="kpi-card blue"><div class="kpi-label">% Pipeline Abierto</div><div class="kpi-value" id="r-pct">—</div><div class="kpi-sub">At risk vs total open</div></div>
-        <div class="kpi-card purple"><div class="kpi-label">Avg Días Parado</div><div class="kpi-value" id="r-avg">—</div><div class="kpi-sub">Deals at risk</div></div>
+        <div class="kpi-card amber"><div class="kpi-label">Total at Risk</div><div class="kpi-value" id="r-total">—</div><div class="kpi-sub">&gt;14 days no activity</div></div>
+        <div class="kpi-card red"><div class="kpi-label">Critical (&gt;30d)</div><div class="kpi-value" id="r-critical">—</div><div class="kpi-sub">Urgent action needed</div></div>
+        <div class="kpi-card blue"><div class="kpi-label">% Open Pipeline</div><div class="kpi-value" id="r-pct">—</div><div class="kpi-sub">At risk vs total open</div></div>
+        <div class="kpi-card purple"><div class="kpi-label">Avg Days Stalled</div><div class="kpi-value" id="r-avg">—</div><div class="kpi-sub">Deals at risk</div></div>
         <div class="kpi-card red"><div class="kpi-label">Revenue at Risk</div><div class="kpi-value" id="r-revenue">—</div><div class="kpi-sub">Amount total stalled</div></div>
       </div>
       <div id="risk-content"></div>
@@ -357,8 +357,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function authenticate() {
   const input = document.getElementById('token-input').value.trim();
-  if (!input) { showAuthError('Ingresa tu contraseña.'); return; }
-  if (input !== PASSWORD) { showAuthError('Contraseña incorrecta.'); return; }
+  if (!input) { showAuthError('Please enter your password.'); return; }
+  if (input !== PASSWORD) { showAuthError('Incorrect password.'); return; }
   TOKEN = PASSWORD;
   localStorage.setItem('st_unlocked', '1');
   init();
@@ -388,8 +388,8 @@ async function init() {
 async function hsGet(path) {
   const url = `${PROXY}?path=${encodeURIComponent(path)}`;
   const res = await fetch(url, { headers: { 'x-dashboard-key': TOKEN } });
-  if (res.status === 401) throw new Error('Token inválido — verifica tu Private App Token.');
-  if (!res.ok) throw new Error(`Error HubSpot API: ${res.status}`);
+  if (res.status === 401) throw new Error('Invalid token — please verify your Private App Token.');
+  if (!res.ok) throw new Error(`HubSpot API error: ${res.status}`);
   return res.json();
 }
 
@@ -400,8 +400,8 @@ async function hsPost(path, body) {
     headers: { 'x-dashboard-key': TOKEN, 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  if (res.status === 401) throw new Error('Token inválido.');
-  if (!res.ok) throw new Error(`Error HubSpot API: ${res.status}`);
+  if (res.status === 401) throw new Error('Invalid token.');
+  if (!res.ok) throw new Error(`HubSpot API error: ${res.status}`);
   return res.json();
 }
 
@@ -422,7 +422,7 @@ async function fetchAllPages(path, body, cap=3000) {
 // ── LOAD ──────────────────────────────────────────────────────────────────────
 async function loadDashboard() {
   showLoading(true);
-  setProgress('Cargando deals...');
+  setProgress('Loading deals...');
   const btn = document.getElementById('refresh-btn');
   if (btn) btn.disabled = true;
 
@@ -434,7 +434,7 @@ async function loadDashboard() {
       sorts: [{ propertyName:'createdate', direction:'DESCENDING' }]
     }, 4000);
 
-    setProgress(`${deals.length} deals cargados. Cargando actividades...`);
+    setProgress(`${deals.length} deals loaded. Loading activities...`);
     const since2026 = '2026-01-01T00:00:00.000Z';
 
     let calls = [];
@@ -443,34 +443,34 @@ async function loadDashboard() {
         filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
         properties: ['hubspot_owner_id','hs_timestamp','hs_call_status']
       }, 2000);
-    } catch(e) { console.warn('Calls no disponibles:', e.message); }
+    } catch(e) { console.warn('Calls not available:', e.message); }
 
-    setProgress('Cargando meetings...');
+    setProgress('Loading meetings...');
     let meetings = [];
     try {
       meetings = await fetchAllPages('/crm/v3/objects/meetings/search', {
         filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
         properties: ['hubspot_owner_id','hs_timestamp','hs_meeting_outcome']
       }, 2000);
-    } catch(e) { console.warn('Meetings no disponibles:', e.message); }
+    } catch(e) { console.warn('Meetings not available:', e.message); }
 
-    setProgress('Cargando emails...');
+    setProgress('Loading emails...');
     let emails = [];
     try {
       emails = await fetchAllPages('/crm/v3/objects/emails/search', {
         filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
         properties: ['hubspot_owner_id','hs_timestamp','hs_email_direction']
       }, 2000);
-    } catch(e) { console.warn('Emails no disponibles:', e.message); }
+    } catch(e) { console.warn('Emails not available:', e.message); }
 
-    setProgress('Cargando notas y tasks...');
+    setProgress('Loading notes and tasks...');
     let notes = [];
     try {
       notes = await fetchAllPages('/crm/v3/objects/notes/search', {
         filterGroups: [{ filters: [{ propertyName:'hs_timestamp', operator:'GTE', value: since2026 }] }],
         properties: ['hubspot_owner_id','hs_timestamp']
       }, 2000);
-    } catch(e) { console.warn('Notes no disponibles:', e.message); }
+    } catch(e) { console.warn('Notes not available:', e.message); }
 
     let tasks = [];
     try {
@@ -481,9 +481,9 @@ async function loadDashboard() {
         ]}],
         properties: ['hubspot_owner_id','hs_timestamp','hs_task_status']
       }, 2000);
-    } catch(e) { console.warn('Tasks no disponibles:', e.message); }
+    } catch(e) { console.warn('Tasks not available:', e.message); }
 
-    setProgress('Procesando datos...');
+    setProgress('Processing data...');
     // Store raw data for quarter filtering
     RAW_DATA = { deals, calls, meetings, emails, notes, tasks };
     DASH_DATA = processData(deals, calls, meetings, emails, notes, tasks);
@@ -491,13 +491,13 @@ async function loadDashboard() {
     renderAll(DASH_DATA);
 
     document.getElementById('last-updated').textContent =
-      'Actualizado: ' + new Date().toLocaleString('es-ES',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      'Updated: ' + new Date().toLocaleString('en-US',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
     document.getElementById('dashboard').style.display = 'block';
     showLoading(false);
   } catch(err) {
     showLoading(false);
     console.error('Dashboard error:', err);
-    alert('Error cargando datos: ' + err.message + '\n\nVerifica que el token sea correcto y que el proxy esté activo.');
+    alert('Error loading data: ' + err.message + '\n\nPlease verify that the token is correct and the proxy is active.');
   }
   if (btn) btn.disabled = false;
 }
@@ -690,7 +690,7 @@ function renderOverview({ reps, team }) {
       { label:'Calls',    data:ownerIds.map(id=>reps[id].calls),    backgroundColor:'#6366f1cc', borderRadius:2 },
       { label:'Meetings', data:ownerIds.map(id=>reps[id].meetings), backgroundColor:'#10b981cc', borderRadius:2 },
       { label:'Emails',   data:ownerIds.map(id=>reps[id].emails),   backgroundColor:'#0891b2cc', borderRadius:2 },
-      { label:'Notas',    data:ownerIds.map(id=>reps[id].notes),    backgroundColor:'#f59e0bcc', borderRadius:2 },
+      { label:'Notes',    data:ownerIds.map(id=>reps[id].notes),    backgroundColor:'#f59e0bcc', borderRadius:2 },
       { label:'Tasks',    data:ownerIds.map(id=>reps[id].tasks),    backgroundColor:'#8b5cf6cc', borderRadius:2 },
     ]
   },{ responsive:true,maintainAspectRatio:false, plugins:{legend:{position:'bottom',labels:{font:{size:10},boxWidth:10}}}, scales:{x:{stacked:true,ticks:{font:{size:10}}},y:{stacked:true,ticks:{font:{size:10}},beginAtZero:true}} });
@@ -820,7 +820,7 @@ function renderRisk({ reps, team }, filterRep='all') {
   allStalled.sort((a,b)=>b.daysStalled-a.daysStalled);
 
   if(!allStalled.length){
-    document.getElementById('risk-content').innerHTML='<div class="empty-state">✅ No hay deals at risk para este rep.</div>';
+    document.getElementById('risk-content').innerHTML='<div class="empty-state">✅ No deals at risk for this rep.</div>';
     return;
   }
 
@@ -831,7 +831,7 @@ function renderRisk({ reps, team }, filterRep='all') {
     const col = OWNERS[id].color;
     const repRevenue = repDeals.reduce((sum,{deal})=>{ const a=parseFloat(deal.properties.amount); return sum+(isNaN(a)?0:a); },0);
     const repRevFmt = repRevenue>0 ? '$'+repRevenue.toLocaleString('en-US',{maximumFractionDigits:0}) : '—';
-    html+=`<div class="rep-group-title" style="color:${col}">${OWNERS[id].name} — ${repDeals.length} deal${repDeals.length>1?'s':''} at risk · <span style="color:#ef4444">${repRevFmt} en riesgo</span></div><div class="risk-grid">`;
+    html+=`<div class="rep-group-title" style="color:${col}">${OWNERS[id].name} — ${repDeals.length} deal${repDeals.length>1?'s':''} at risk · <span style="color:#ef4444">${repRevFmt} at risk</span></div><div class="risk-grid">`;
     repDeals.forEach(({deal,daysStalled})=>{
       const p=deal.properties;
       const isCrit=daysStalled>=30;
@@ -840,12 +840,12 @@ function renderRisk({ reps, team }, filterRep='all') {
       html+=`<div class="risk-card ${isCrit?'':'medium'}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
           <div class="risk-deal"><a href="${HS_APP}${deal.id}" target="_blank">${p.dealname||'—'}</a></div>
-          <span class="risk-tag ${isCrit?'rt-critical':'rt-warning'}">${isCrit?'🔴 CRÍTICO':'🟡 RIESGO'}</span>
+          <span class="risk-tag ${isCrit?'rt-critical':'rt-warning'}">${isCrit?'🔴 CRITICAL':'🟡 AT RISK'}</span>
         </div>
         <div class="risk-meta">📍 ${STAGES[p.dealstage]||p.dealstage}</div>
-        <div class="risk-meta">📅 Creado: ${p.createdate?new Date(p.createdate).toLocaleDateString('es-ES'):'—'}</div>
+        <div class="risk-meta">📅 Created: ${p.createdate?new Date(p.createdate).toLocaleDateString('en-US'):'—'}</div>
         ${amtFmt!=='—'?`<div class="risk-meta" style="margin-top:4px;font-weight:700;color:#0f172a">💰 ${amtFmt}</div>`:''}
-        <div class="risk-meta" style="margin-top:6px;font-weight:700;color:${isCrit?'#b91c1c':'#92400e'}">${daysStalled}d sin actividad — ${isCrit?'acción urgente':'seguimiento esta semana'}</div>
+        <div class="risk-meta" style="margin-top:6px;font-weight:700;color:${isCrit?'#b91c1c':'#92400e'}">${daysStalled}d no activity — ${isCrit?'urgent action needed':'follow up this week'}</div>
       </div>`;
     });
     html+='</div>';
@@ -914,8 +914,8 @@ function toggleQ(btn) {
 
   // Update label
   const label = activeQs.has('all')
-    ? 'Mostrando: All Time'
-    : 'Mostrando: ' + [...activeQs].sort().map(k => Q_LABELS[k]).join(' + ');
+    ? 'Showing: All Time'
+    : 'Showing: ' + [...activeQs].sort().map(k => Q_LABELS[k]).join(' + ');
   document.getElementById('q-label').textContent = label;
 
   applyQuarterFilter();
